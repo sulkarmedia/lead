@@ -6,7 +6,8 @@ export type Channel = "sms" | "email" | "note" | "system";
 export type MsgStatus = "pending_approval" | "queued" | "sent" | "delivered" | "failed" | "blocked" | "received";
 export type JobKind =
   | "first_touch" | "followup" | "reminder" | "handoff_sla" | "capi_event" | "crm_push" | "webhook_out"
-  | "agent_reply" | "scheduled_send" | "appointment_check" | "daily_digest" | "meta_poll";
+  | "agent_reply" | "scheduled_send" | "appointment_check" | "daily_digest" | "meta_poll"
+  | "calendar_sync" | "inventory_sync" | "ad_spend_pull";
 
 export interface Org {
   id: string;

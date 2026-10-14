@@ -1,0 +1,26 @@
+name: BMW pre-order reservations
+goal: appointment
+goal_detail: Book a showroom visit or a call with a product specialist to configure and reserve
+qualification_fields:
+  model_interest: { label: "Model", options: [i3, iX3, X5], required: true }
+  configuration: { label: "Trim, color or packages wanted" }
+  timeline: { label: "When they want to decide or take delivery", required: true }
+  payment_type: { label: "Cash, finance or lease", options: [cash, finance, lease] }
+  trade_in: { label: "Trade-in year, make, model, miles" }
+  current_bmw_owner: { label: "Currently drives a BMW" }
+warm_rule: "model_interest AND timeline within 90 days AND (payment_type OR trade_in)"
+handoff_triggers:
+  - asks for a price, payment, allocation date or deposit term not in knowledge
+  - wants to place the reservation now
+  - asks for a person
+  - complaint or frustration
+cadence: default
+send_window: { start: "09:00", end: "20:00", sundays: false }
+tone: "Premium, concise, warm. No hype. First name only. One question per text."
+never_say:
+  - guaranteed delivery date
+  - lowest price
+  - best deal
+booking: { kinds: [in_person, call], slot_minutes: 45, min_notice_minutes: 120, days_ahead: 7 }
+approve_before_send: true   # first two weeks
+intro_template: "Hi {first_name}, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new {model_interest}. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out."

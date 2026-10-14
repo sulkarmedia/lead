@@ -153,7 +153,7 @@ export async function loadFacts(db: Db, leadId: string, channel: "sms" | "email"
     db,
     `select count(*)::int as count from messages
       where lead_id = $1 and channel = $2 and direction = 'outbound' and is_automated and not is_reply
-        and status in ('queued', 'sent', 'delivered') and coalesce(sent_at, created_at) > $3`,
+        and status in ('sent', 'delivered') and sent_at > $3`,
     [leadId, channel, since],
   );
   const dnc = lead.phone_e164

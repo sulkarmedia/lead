@@ -312,7 +312,8 @@ create table jobs (
 );
 create index jobs_due on jobs (run_at) where status = 'queued';
 create index jobs_lead on jobs (lead_id, kind, status);
-create unique index jobs_dedupe on jobs (dedupe_key) where dedupe_key is not null and status in ('queued', 'running');
+-- Dedupe only among pending jobs: a running job may enqueue its own successor under the same key.
+create unique index jobs_dedupe on jobs (dedupe_key) where dedupe_key is not null and status = 'queued';
 
 create table stage_events (
   id uuid primary key default gen_random_uuid(),
