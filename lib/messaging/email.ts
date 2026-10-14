@@ -16,6 +16,10 @@ export function unsubscribeUrl(lead: Pick<Lead, "unsubscribe_token">) {
   return `${env.appUrl}/u/${lead.unsubscribe_token}`;
 }
 
+export function oneClickUnsubscribeUrl(lead: Pick<Lead, "unsubscribe_token">) {
+  return `${env.appUrl}/api/unsubscribe/${lead.unsubscribe_token}`;
+}
+
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function buildEmail(org: Pick<Org, "name" | "slug" | "address">, lead: Pick<Lead, "email_reply_token" | "unsubscribe_token">, body: string) {
@@ -31,7 +35,7 @@ export function buildEmail(org: Pick<Org, "name" | "slug" | "address">, lead: Pi
     text: body + footer,
     html,
     headers: {
-      "List-Unsubscribe": `<${unsub}>`,
+      "List-Unsubscribe": `<${oneClickUnsubscribeUrl(lead)}>, <${unsub}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
   };
