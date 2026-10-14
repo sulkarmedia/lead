@@ -4,7 +4,7 @@ Source of truth: `docs/SPEC.md` (the build spec). This file holds the stack, the
 
 ## Current phase
 
-**Phase 1 (text agent MVP)** — Phase 0 foundation built. See "Phase status" at the bottom.
+**Phases 0–2 built and tested locally; 3–5 partly built.** Blocked on HUMAN STEPs (docs/HUMAN_STEPS.md): deploy, API keys, real-model eval gate, carrier registration, Meta review, attorney sign-off. Details in docs/STATUS.md.
 
 ## Stack (pinned — don't swap without writing the reason here)
 
@@ -61,7 +61,8 @@ tests/               unit, db, agent-evals, e2e
 - `npm run db:local` — start local Postgres (port 54329) · `npm run db:migrate` — apply migrations to `DATABASE_URL`
 - `npm test` — unit + DB tests (needs `npm run db:local`) · `npm run typecheck`
 - `npm run seed` — demo dealership · `npm run dev` / `npm run worker`
-- `npm run evals` — agent evals against the real model (needs `ANTHROPIC_API_KEY`; gate is 90%)
+- `npm run evals` — agent evals against the real model (needs `ANTHROPIC_API_KEY`; gate is 90%); `--offline` checks the harness
+- `npx playwright test` — e2e on its own DB (`leadline_e2e`) and port 3201
 
 ## Phase status
 
