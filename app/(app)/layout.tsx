@@ -4,10 +4,12 @@ import { env } from "@/lib/env";
 import { maybeOne, service } from "@/lib/db";
 import { OrgSwitcher } from "../_components/OrgSwitcher";
 import { NavLinks } from "../_components/NavLinks";
+import { syncClock } from "@/lib/clock-sync";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  await syncClock();
   const ctx = await getOrgContext();
   const counts = await maybeOne<{ attention: number }>(service(),
     `select ((select count(*) from messages where org_id = $1 and status in ('pending_approval', 'failed'))

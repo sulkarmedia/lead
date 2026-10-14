@@ -24,6 +24,7 @@ export const env = {
   get googleClientId() { return process.env.GOOGLE_CLIENT_ID; },
   get googleClientSecret() { return process.env.GOOGLE_CLIENT_SECRET; },
   get supabaseUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL; },
+  get supabaseServiceRoleKey() { return process.env.SUPABASE_SERVICE_ROLE_KEY; },
   get supabaseAnonKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY; },
   get devLogin() { return process.env.DEV_LOGIN === "true" && process.env.NODE_ENV !== "production"; },
   get sentryDsn() { return process.env.SENTRY_DSN; },
