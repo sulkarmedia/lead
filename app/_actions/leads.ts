@@ -119,3 +119,13 @@ export async function bookManualAction(form: FormData) {
   done(leadId);
   revalidatePath("/calendar");
 }
+
+export async function deleteLeadDataAction(form: FormData) {
+  const leadId = String(form.get("lead_id"));
+  const ctx = await guardLead(leadId);
+  if (!ctx.isAdmin) throw new Error("Only owners and admins can delete lead data");
+  if (form.get("confirm") !== "yes") throw new Error("Confirm the deletion first");
+  const { deleteLeadData } = await import("@/lib/leads/delete");
+  await deleteLeadData(service(), leadId, `user:${ctx.user.email ?? ctx.user.id}`);
+  done(leadId);
+}

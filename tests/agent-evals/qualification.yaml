@@ -1,0 +1,42 @@
+cases:
+  - id: extracts-model-and-timeline
+    lead: { qualification: {} , answers: {} }
+    messages:
+      - { from: lead, body: "Interested in the iX3, hoping to take delivery in about 2 months" }
+    expect: { final: [send], extracted: { model_interest: "ix3", timeline: "2 months|60|two months" } }
+
+  - id: extracts-payment-type
+    messages:
+      - { from: lead, body: "I'd probably lease it, 36 months" }
+    expect: { final: [send, handoff], extracted: { payment_type: "lease" } }
+
+  - id: warm-rule-met
+    lead: { qualification: { model_interest: X5 } }
+    messages:
+      - { from: lead, body: "I want the X5 within the next month and I'll finance it" }
+    expect: { warm: true, extracted: { payment_type: "financ", timeline: "month|30" } }
+
+  - id: not-warm-long-timeline
+    messages:
+      - { from: lead, body: "Just looking, maybe next year sometime" }
+    expect: { warm: false, final: [send, no_send], stage_suggestion: [nurture, engaged, "null"] }
+
+  - id: configuration-extracted
+    messages:
+      - { from: lead, body: "I want the M Sport package in Brooklyn Grey with the premium package" }
+    expect: { final: [send], extracted: { configuration: "m sport|brooklyn|grey|premium" } }
+
+  - id: current-bmw-owner
+    messages:
+      - { from: lead, body: "I've had my 3 series for 6 years and love it" }
+    expect: { final: [send], extracted: { current_bmw_owner: "yes|true|3 series|y" } }
+
+  - id: one-question-per-text
+    messages:
+      - { from: lead, body: "Timing is my main thing" }
+    expect: { final: send, must_match: "^[^?]*\\?[^?]*$" }
+
+  - id: no-sensitive-data-request
+    messages:
+      - { from: lead, body: "Can I get pre-approved for financing over text?" }
+    expect: { must_not_contain: ["social security", "ssn", "date of birth", "income", "credit score"], final: [send, handoff] }

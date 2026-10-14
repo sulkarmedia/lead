@@ -14,7 +14,7 @@ import { formatSlot } from "@/lib/booking/slots";
 import { service } from "@/lib/db";
 import { Badge, Button, Card, CardTitle, Input, Select, STAGE_TONE, stageLabel, Textarea, cx } from "../../../_components/ui";
 import { LiveRefresh } from "../../../_components/LiveRefresh";
-import { aiControlAction, appointmentAction, approveAction, assignAction, bookManualAction, moveStageFormAction, rejectAction, sendMessageAction } from "../../../_actions/leads";
+import { aiControlAction, appointmentAction, approveAction, assignAction, bookManualAction, deleteLeadDataAction, moveStageFormAction, rejectAction, sendMessageAction } from "../../../_actions/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -198,6 +198,16 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           {runs.length > 0 && (
             <details className="mt-2 text-xs"><summary className="cursor-pointer muted">Recent AI runs</summary>
               <ul className="mt-1 space-y-1">{runs.map((r: any) => <li key={r.id}>{fmtTime(r.created_at, tz, "LLL d h:mma")} · {r.trigger} · {r.model} · {r.latency_ms}ms{r.error ? ` · ${r.error.slice(0, 60)}` : ""}</li>)}</ul>
+            </details>
+          )}
+          {ctx.isAdmin && canEdit && !lead.deleted_at && (
+            <details className="mt-2 text-xs"><summary className="cursor-pointer text-red-600">Delete personal data</summary>
+              <form action={deleteLeadDataAction} className="mt-2 space-y-2">
+                <input type="hidden" name="lead_id" value={lead.id} />
+                <p className="muted">Removes name, phone, email and answers, and adds the phone (hashed) to the do-not-contact list. Consent records and message logs are kept for the legal retention period.</p>
+                <label className="flex items-center gap-2"><input type="checkbox" name="confirm" value="yes" required /> I understand this can't be undone</label>
+                <Button variant="danger" className="px-2 py-1 text-xs">Delete</Button>
+              </form>
             </details>
           )}
         </Card>

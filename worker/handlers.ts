@@ -22,6 +22,7 @@ import { getSenders } from "../lib/messaging/sender";
 import { createCalendarEvent, deleteCalendarEvent } from "../lib/integrations/google";
 import { dailyDigest } from "../lib/digest";
 import { pollMetaForms } from "../lib/integrations/meta-sync";
+import { pullAdSpend } from "../lib/integrations/meta-connect";
 
 export class Reschedule extends Error {
   constructor(public runAt: Date) { super(`reschedule to ${runAt.toISOString()}`); }
@@ -68,6 +69,9 @@ export async function handleJob(db: Db, job: Job): Promise<void> {
       return;
     case "meta_poll":
       await pollMetaForms(db, job.org_id);
+      return;
+    case "ad_spend_pull":
+      await pullAdSpend(db, job.org_id);
       return;
     default:
       log.warn("job.unhandled", { kind: job.kind, job_id: job.id });
@@ -208,6 +212,10 @@ export async function scheduleRecurring(db: Db) {
     if (meta) {
       const slot = Math.floor(now().getTime() / (15 * 60_000));
       await enqueue(db, { orgId: org.id, kind: "meta_poll", runAt: new Date((slot + 1) * 15 * 60_000), dedupeKey: `metapoll:${org.id}:${slot + 1}` });
+      // Ad spend for cost per appointment, once a day at 05:00 org time.
+      let spendAt = local.set({ hour: 5, minute: 0, second: 0, millisecond: 0 });
+      if (spendAt <= local) spendAt = spendAt.plus({ days: 1 });
+      await enqueue(db, { orgId: org.id, kind: "ad_spend_pull", runAt: spendAt.toJSDate(), dedupeKey: `spend:${org.id}:${spendAt.toISODate()}` });
     }
   }
 }

@@ -9,6 +9,7 @@ import { log } from "../lib/log";
 import { now, setOffsetMs } from "../lib/clock";
 import { RetryLater } from "../lib/conversation";
 import { handleJob, Reschedule, scheduleRecurring } from "./handlers";
+import { watchdog } from "../lib/watchdog";
 
 export const workerId = `${hostname()}:${process.pid}:${randomUUID().slice(0, 6)}`;
 
@@ -59,6 +60,7 @@ async function main() {
       await heartbeat();
       if (Date.now() - lastRecurring > 5 * 60_000) {
         await scheduleRecurring(service());
+        await watchdog(service());
         lastRecurring = Date.now();
       }
       // Drain everything due, then sleep.

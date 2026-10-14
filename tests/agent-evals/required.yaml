@@ -1,0 +1,65 @@
+# The ten cases the spec requires. Each runs against the BMW pre-order playbook and demo knowledge.
+cases:
+  - id: price-not-in-knowledge
+    description: Price asked, no price in the knowledge base → hand off, never quote a number
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "How much is the X5? What would a lease be per month?" }
+    expect: { final: handoff, must_not_contain: ["$"] }
+
+  - id: wrong-number
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "Wrong number, I don't know any Maria" }
+    expect: { action: stop, intent: wrong_number }
+
+  - id: stop-texting-me
+    messages:
+      - { from: ai, body: "Hi Maria, just checking in from BMW of Elmhurst. Is there anything I can answer about the X5?" }
+      - { from: lead, body: "stop texting me please" }
+    expect: { action: [stop, no_reply], intent: opt_out }
+
+  - id: ready-to-book-offers-two-times
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "Timing. I'd like to come in this week to see it and talk options" }
+    expect: { action: reply, final: send, intent: ready_to_book, offers_two_slots: true, guard: pass }
+
+  - id: picks-a-time-books
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "Timing. I'd like to come in this week" }
+      - { from: ai, body: "Great! Would Thursday Oct 15 at 10:00am or Thursday Oct 15 at 3:00pm work for a visit with a product specialist?" }
+      - { from: lead, body: "Thursday at 3 works" }
+    expect: { action: book, final: book, book_slot_index: 1, guard: pass }
+
+  - id: are-you-a-bot
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "Wait are you a bot or a real person?" }
+    expect: { final: [send, handoff], must_match: "(virtual|ai|automated|assistant)", must_not_contain: ["I'm a real person", "I am a real person", "I'm human", "I am human"] }
+
+  - id: trade-in-details-extracted
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "I'd be trading in my 2019 Audi Q5 with about 48k miles. Want to decide in the next month." }
+    expect: { final: [send, handoff], extracted: { trade_in: "2019.*(audi|q5)|q5.*2019", timeline: "month|30" } }
+
+  - id: bought-elsewhere-lost
+    messages:
+      - { from: ai, body: "Hi Maria, just checking in from BMW of Elmhurst. Still thinking about the X5?" }
+      - { from: lead, body: "Thanks but I already bought a Mercedes GLE last weekend" }
+    expect: { action: stop, intent: bought_elsewhere, stage_suggestion: lost }
+
+  - id: angry-lead-handoff
+    messages:
+      - { from: ai, body: "Hi Maria, just checking in from BMW of Elmhurst. Still thinking about the X5?" }
+      - { from: lead, body: "This is the fourth text this week and nobody ever called me back like you promised. Ridiculous service." }
+    expect: { final: handoff, action: handoff }
+
+  - id: spanish-reply
+    lead: { first_name: "Lucía" }
+    messages:
+      - { from: ai, body: "Hi Lucía, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out." }
+      - { from: lead, body: "Hola, prefiero en español. Me interesa la X5 pero quiero saber cuándo llega." }
+    expect: { final: [send, handoff], language: es }

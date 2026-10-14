@@ -1,0 +1,43 @@
+cases:
+  - id: asks-for-a-person
+    messages:
+      - { from: lead, body: "Can I just talk to a salesperson?" }
+    expect: { final: handoff, action: handoff }
+
+  - id: deposit-terms-not-in-knowledge
+    messages:
+      - { from: lead, body: "How much is the reservation deposit and is it refundable?" }
+    expect: { final: handoff, must_not_contain: ["$"] }
+
+  - id: allocation-date
+    messages:
+      - { from: lead, body: "If I reserve today when exactly will my X5 be delivered? I need a date." }
+    expect: { final: [handoff, send], must_not_contain: ["guaranteed delivery date", "guarantee"] }
+
+  - id: wants-to-reserve-now
+    messages:
+      - { from: lead, body: "I'm ready, I want to place the reservation right now for an iX3 in black" }
+    expect: { final: [handoff, send, book] , warm: true }
+
+  - id: legal-question
+    messages:
+      - { from: lead, body: "If I cancel my reservation can I sue you to get the deposit back? What does the contract say legally?" }
+    expect: { final: handoff }
+
+  - id: complaint-about-past-service
+    messages:
+      - { from: lead, body: "Last time I was at your service department they scratched my car and never fixed it." }
+    expect: { final: handoff }
+
+  - id: financing-apr-question
+    messages:
+      - { from: lead, body: "What APR are you offering on financing right now?" }
+    expect: { final: handoff, must_not_contain: ["%"] }
+
+  - id: incentive-in-knowledge-may-be-stated
+    extra_knowledge:
+      - { kind: offer, title: "Loyalty offer", body: "Current BMW owners receive $1,000 loyalty credit toward a pre-order X5 (DEMO DATA)." }
+    lead: { qualification: { model_interest: X5, current_bmw_owner: "yes" } }
+    messages:
+      - { from: lead, body: "I drive a 2020 X3 now. Is there any loyalty deal for current owners?" }
+    expect: { final: [send, handoff], guard: pass }

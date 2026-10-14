@@ -89,6 +89,47 @@ export async function buildContext(db: Db, leadId: string, trigger: AgentTrigger
   const fields = playbook.qualification_fields;
   const missing = Object.entries(fields).filter(([k, f]) => f.required && !lead.qualification?.[k]).map(([k]) => k);
 
+  const live = renderLiveContext({
+    at, tz, businessOpen: businessOpen(orgAvail?.weekly_hours, org.timezone, at), repName: rep?.display_name ?? null,
+    lead, slots, messages, trigger, smsAvailable, missing,
+  });
+
+  return {
+    org, lead, playbook, knowledge, repName: rep?.display_name ?? null, messages, slots, smsAvailable, emailAvailable, isFirstMessage,
+    request: { system: SYSTEM_PROMPT, playbook: renderPlaybook(org, playbook), knowledge: renderKnowledge(knowledge), live },
+  };
+}
+
+function lastInboundChannel(messages: Message[]): "sms" | "email" | null {
+  for (let i = messages.length - 1; i >= 0; i--) if (messages[i].author === "lead") return messages[i].channel as "sms" | "email";
+  return null;
+}
+
+export function renderIntroTemplate(tpl: string, org: Pick<Org, "name">, lead: Pick<Lead, "first_name" | "qualification" | "answers">): string {
+  const vars: Record<string, string> = {
+    first_name: lead.first_name ?? "there",
+    business_name: org.name,
+    ...Object.fromEntries(Object.entries({ ...(lead.answers ?? {}), ...(lead.qualification ?? {}) }).map(([k, v]) => [k, String(v)])),
+  };
+  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? (k === "model_interest" ? "vehicle" : "")).replace(/\s+/g, " ").replace(/ ([.,?!])/g, "$1").trim();
+}
+
+export interface LiveContextInput {
+  at: Date;
+  tz: string;
+  businessOpen: boolean;
+  repName: string | null;
+  lead: Pick<Lead, "full_name" | "first_name" | "phone_e164" | "email" | "zip" | "stage" | "warm" | "campaign_name" | "ad_name" | "answers" | "qualification">;
+  slots: Slot[];
+  messages: Message[];
+  trigger: AgentTrigger;
+  smsAvailable: boolean;
+  missing: string[];
+}
+
+/** The volatile part of the prompt. Pure, so evals render exactly what production sends. */
+export function renderLiveContext(p: LiveContextInput): string {
+  const { at, tz, lead, slots, messages, trigger, smsAvailable, missing } = p;
   let instruction: string;
   let channelNote: string;
   switch (trigger.kind) {
@@ -114,8 +155,8 @@ export async function buildContext(db: Db, leadId: string, trigger: AgentTrigger
       break;
   }
 
-  const live = `NOW: ${DateTime.fromJSDate(at, { zone: tz }).toFormat("cccc LLL d yyyy, h:mma")} in the lead's time zone (${tz}). The business is ${businessOpen(orgAvail?.weekly_hours, org.timezone, at) ? "OPEN" : "CLOSED"} right now.
-ASSIGNED REP: ${rep?.display_name ?? "(unassigned — say 'a member of our team')"}
+  return `NOW: ${DateTime.fromJSDate(at, { zone: tz }).toFormat("cccc LLL d yyyy, h:mma")} in the lead's time zone (${tz}). The business is ${p.businessOpen ? "OPEN" : "CLOSED"} right now.
+ASSIGNED REP: ${p.repName ?? "(unassigned — say 'a member of our team')"}
 
 LEAD
 Name: ${lead.full_name ?? "(unknown)"} (first name: ${lead.first_name ?? "(unknown)"})
@@ -130,28 +171,10 @@ OPEN SLOTS (lead's local time; offer exactly two; use these ids only)
 ${slots.length ? slots.map((s) => `- ${s.id}: ${formatSlot(s, tz)}`).join("\n") : "- (none available — offer to have the team reach out to schedule)"}
 
 CONVERSATION (oldest first)
-${messages.length ? messages.map((m) => describeMessage(m, tz, rep?.display_name ?? null)).join("\n") : "(no messages yet)"}
+${messages.length ? messages.map((m) => describeMessage(m, tz, p.repName)).join("\n") : "(no messages yet)"}
 
 TASK
 ${instruction}
 Write message.channel = "${channelNote}".${channelNote === "email" ? " Include a subject." : " Set subject to null."}`;
 
-  return {
-    org, lead, playbook, knowledge, repName: rep?.display_name ?? null, messages, slots, smsAvailable, emailAvailable, isFirstMessage,
-    request: { system: SYSTEM_PROMPT, playbook: renderPlaybook(org, playbook), knowledge: renderKnowledge(knowledge), live },
-  };
-}
-
-function lastInboundChannel(messages: Message[]): "sms" | "email" | null {
-  for (let i = messages.length - 1; i >= 0; i--) if (messages[i].author === "lead") return messages[i].channel as "sms" | "email";
-  return null;
-}
-
-export function renderIntroTemplate(tpl: string, org: Pick<Org, "name">, lead: Pick<Lead, "first_name" | "qualification" | "answers">): string {
-  const vars: Record<string, string> = {
-    first_name: lead.first_name ?? "there",
-    business_name: org.name,
-    ...Object.fromEntries(Object.entries({ ...(lead.answers ?? {}), ...(lead.qualification ?? {}) }).map(([k, v]) => [k, String(v)])),
-  };
-  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? (k === "model_interest" ? "vehicle" : "")).replace(/\s+/g, " ").replace(/ ([.,?!])/g, "$1").trim();
 }

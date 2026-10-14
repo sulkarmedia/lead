@@ -148,3 +148,20 @@ describe("phase 1 acceptance", () => {
     expect(l.cadence_step).toBe(6);
   });
 });
+
+describe("deletion requests", () => {
+  it("scrubs personal data and blocks re-contact through do-not-contact", async () => {
+    const { deleteLeadData } = await import("@/lib/leads/delete");
+    const d = await setup();
+    const r = (await ingestLead(d.orgId, d.sourceId, lead())) as any;
+    await drain();
+    await deleteLeadData(service(), r.leadId, "test");
+    expect(await one<any>(service(), "select phone_e164, email, full_name from leads where id = $1", [r.leadId])).toEqual({ phone_e164: null, email: null, full_name: "[deleted]" });
+    advance(40 * 86400_000);
+    const again = (await ingestLead(d.orgId, d.sourceId, lead({ meta_lead_id: "new-one" }))) as any;
+    await drain();
+    const l2 = await one<any>(service(), "select ai_status, ai_paused_reason from leads where id = $1", [again.leadId]);
+    expect(l2).toEqual({ ai_status: "stopped", ai_paused_reason: "do_not_contact" });
+    expect((await messagesFor(again.leadId)).filter((m) => m.direction === "outbound" && m.status === "sent")).toHaveLength(0);
+  });
+});

@@ -2,6 +2,7 @@
 import { maybeOne, service } from "@/lib/db";
 import { env } from "@/lib/env";
 import { json } from "@/lib/http";
+import { watchdog } from "@/lib/watchdog";
 
 export const dynamic = "force-dynamic";
 
@@ -30,5 +31,6 @@ export async function GET() {
     meta: !!(env.metaAppId && env.metaAppSecret), google: !!(env.googleClientId && env.googleClientSecret),
   };
   checks.dry_run = env.dryRun;
+  checks.alerts = await watchdog(service()).catch(() => []);
   return json({ ok, ...checks }, ok ? 200 : 503);
 }

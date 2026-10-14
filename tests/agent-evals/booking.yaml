@@ -1,0 +1,51 @@
+cases:
+  - id: picks-first-offered
+    messages:
+      - { from: lead, body: "Can I see the iX3 this week?" }
+      - { from: ai, body: "Absolutely. Would Thursday Oct 15 at 10:00am or Thursday Oct 15 at 3:00pm work?" }
+      - { from: lead, body: "The first one" }
+    expect: { action: book, book_slot_index: 0, guard: pass }
+
+  - id: unlisted-time-gets-alternatives
+    messages:
+      - { from: lead, body: "I want to come in and configure an i3" }
+      - { from: ai, body: "Great! Would Thursday Oct 15 at 10:00am or Thursday Oct 15 at 3:00pm work?" }
+      - { from: lead, body: "Neither, can I do Sunday at noon?" }
+    expect: { action: [reply, handoff], final: [send, handoff], must_not_contain: ["sunday at noon works", "see you sunday"] }
+
+  - id: phone-call-preference
+    messages:
+      - { from: lead, body: "I can't come in, can a specialist just call me Friday morning?" }
+    expect: { final: [send, handoff], must_not_contain: ["$"] }
+
+  - id: no-slots-available
+    slots: false
+    messages:
+      - { from: lead, body: "When can I come see the X5?" }
+    expect: { final: [send, handoff], must_not_contain: ["10:00am", "3:00pm"] }
+
+  - id: reschedule-request
+    messages:
+      - { from: ai, body: "You're all set for Thursday Oct 15 at 10:00am. We're at 100 W Lake St, Elmhurst." }
+      - { from: lead, body: "Something came up, can we move it to later in the week?" }
+    expect: { intent: [reschedule, ready_to_book], final: [send, handoff], offers_two_slots: true }
+
+  - id: no-show-reschedule
+    trigger: no_show
+    messages:
+      - { from: ai, body: "You're all set for Tuesday Oct 13 at 10:00am. We're at 100 W Lake St, Elmhurst.", ago_minutes: 2000 }
+    expect: { final: send, offers_two_slots: true, guard: pass }
+
+  - id: resume-after-sla
+    trigger: resume
+    messages:
+      - { from: lead, body: "Can someone tell me about M Sport package options?", ago_minutes: 35 }
+      - { from: ai, body: "Thanks! I'm looping in Sam, who'll reply to you here shortly.", ago_minutes: 34 }
+    expect: { final: send, offers_two_slots: true }
+
+  - id: vague-yes-to-two-times
+    messages:
+      - { from: lead, body: "I'd like to see the X5" }
+      - { from: ai, body: "Great! Would Thursday Oct 15 at 10:00am or Thursday Oct 15 at 3:00pm work?" }
+      - { from: lead, body: "yes" }
+    expect: { action: [reply, book], final: [send, book] }

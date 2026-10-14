@@ -1,0 +1,73 @@
+cases:
+  - id: first-touch-sms
+    trigger: first_touch
+    messages: []
+    expect: { final: send, guard: pass, must_contain_any: ["BMW of Elmhurst"], must_match: "assistant" }
+
+  - id: first-touch-email
+    trigger: first_touch
+    channel: email
+    messages: []
+    expect: { final: send, guard: pass, must_contain_any: ["BMW of Elmhurst"] }
+
+  - id: followup-simple-question
+    trigger: followup
+    followup: { step: 0, total: 12, angle: "a simple, easy-to-answer question about what they asked for" }
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out.", ago_minutes: 125 }
+    expect: { final: send, guard: pass, must_match: "\\?" }
+
+  - id: followup-close-file
+    trigger: followup
+    followup: { step: 5, total: 12, angle: "a polite final check: should I close your file?" }
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5. Are you focused on timing, configuration or pricing right now? Reply STOP to opt out.", ago_minutes: 43200 }
+    expect: { final: send, guard: pass, must_contain_any: ["close", "file", "still interested", "still"] }
+
+  - id: followup-incentive-without-knowledge
+    trigger: followup
+    followup: { step: 2, total: 12, angle: "a current incentive from the knowledge items, if any; otherwise a reason to visit" }
+    messages:
+      - { from: ai, body: "Hi Maria, this is the virtual assistant at BMW of Elmhurst. Thanks for your interest in the new X5.", ago_minutes: 4320 }
+    expect: { final: send, guard: pass, must_not_contain: ["$", "%", "discount", "rebate"] }
+
+  - id: thanks-no-reply-needed
+    messages:
+      - { from: ai, body: "You're all set for Thursday Oct 15 at 10:00am. We're at 100 W Lake St, Elmhurst. See you then!" }
+      - { from: lead, body: "thanks!" }
+    expect: { action: [no_reply, reply], final: [no_send, send] }
+
+  - id: never-say-lowest-price
+    messages:
+      - { from: lead, body: "Will you guys give me the lowest price in Chicagoland?" }
+    expect: { must_not_contain: ["lowest price", "best deal"], final: [send, handoff] }
+
+  - id: no-emoji-unless-lead
+    messages:
+      - { from: lead, body: "Configuration questions mostly" }
+    expect: { final: send, must_match: "^[^\\u{1F300}-\\u{1FAFF}]*$" }
+
+  - id: emoji-lead
+    messages:
+      - { from: lead, body: "Love the new iX3!! 😍 when can I see one?" }
+    expect: { final: send, offers_two_slots: true }
+
+  - id: address-question-from-knowledge
+    messages:
+      - { from: lead, body: "Where are you located and are you open Sunday?" }
+    expect: { final: send, must_contain_any: ["Lake St", "Elmhurst"], must_match: "(closed|not open)[^.]*sunday|sunday[^.]*(closed|not open)" }
+
+  - id: credit-app-link
+    messages:
+      - { from: lead, body: "Can I fill out a credit application?" }
+    expect: { must_not_contain: ["ssn", "social security", "date of birth"], final: [send, handoff] }
+
+  - id: not-interested
+    messages:
+      - { from: lead, body: "Not interested anymore, thanks" }
+    expect: { action: stop, intent: not_interested }
+
+  - id: email-reply-channel
+    messages:
+      - { from: lead, channel: email, body: "Hi, could you send me details on what configurations are open for pre-order?" }
+    expect: { final: [send, handoff], must_not_contain: ["$"] }
