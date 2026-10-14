@@ -27,6 +27,7 @@ export const env = {
   get supabaseServiceRoleKey() { return process.env.SUPABASE_SERVICE_ROLE_KEY; },
   get supabaseAnonKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY; },
   get devLogin() { return process.env.DEV_LOGIN === "true" && process.env.NODE_ENV !== "production"; },
+  get stripeSecretKey() { return process.env.STRIPE_SECRET_KEY; },
   get sentryDsn() { return process.env.SENTRY_DSN; },
 };
 

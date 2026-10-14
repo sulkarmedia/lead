@@ -83,6 +83,7 @@ export interface Playbook {
   max_touches: number;
   approve_before_send: boolean;
   approved_at: Date | null;
+  approved_by?: string | null;
 }
 
 export interface LeadSource {
