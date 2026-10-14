@@ -100,8 +100,9 @@ export function runGuards(o: AgentOutput, ctx: GuardContext): GuardResult {
       if (!norm(body).includes(norm(ctx.businessName))) failures.push("first_message_missing_business_name");
       if (!/assistant|asistente/i.test(body)) failures.push("first_message_missing_ai_disclosure");
     }
-    // At most one unanswered AI message per 2 hours outside the scheduled cadence.
-    const cadence = ctx.trigger === "first_touch" || ctx.trigger === "followup";
+    // At most one unanswered AI message per 2 hours outside the scheduled cadence. Scheduled
+    // system steps (first touch, follow-ups, the SLA resume, the no-show reschedule) are exempt.
+    const cadence = ["first_touch", "followup", "resume", "no_show"].includes(ctx.trigger);
     if (!cadence) {
       const recent = ctx.unansweredAiMessages.filter((d) => ctx.now.getTime() - d.getTime() < 2 * 3600_000);
       if (recent.length >= 1) failures.push("unanswered_ai_message_within_2h");

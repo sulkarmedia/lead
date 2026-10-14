@@ -33,12 +33,12 @@ export function offlineDecide(req: AgentRequest): AgentOutput {
     const stop = channel === "sms" ? " Reply STOP to opt out." : "";
     return mk({ message: msg(`Hi ${name}, this is the virtual assistant at ${business}. Thanks for your interest! Are you hoping to come in this week or just exploring for now?${stop}`, `Thanks for reaching out to ${business}`) });
   }
-  if (/hasn't replied/.test(live)) {
+  if (/missed their appointment|hasn't replied in time/.test(live) && slots.length >= 2) {
+    return mk({ message: msg(`${/missed their/.test(live) ? "Sorry we missed you!" : "Sorry for the wait!"} Would ${slots[0].label} or ${slots[1].label} work instead?`) });
+  }
+  if (/The lead hasn't replied/.test(live)) {
     const angle = /Angle: (.+?)\./.exec(live)?.[1] ?? "check in";
     return mk({ message: msg(angle.includes("close your file") ? `Hi ${name}, should I close your file for now, or are you still interested?` : `Hi ${name}, just checking in from ${business}. Is there anything I can answer for you?`) });
-  }
-  if (/missed their appointment|hasn't replied in time/.test(live) && slots.length >= 2) {
-    return mk({ message: msg(`Sorry we missed you! Would ${slots[0].label} or ${slots[1].label} work instead?`) });
   }
   if (/\b(bot|robot|real person|human|ai)\b\??/.test(lower)) {
     return mk({ intent: "question", message: msg(`Yes, I'm the virtual assistant for ${business}. Happy to connect you with someone on the team. Would that help?`) });
