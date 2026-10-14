@@ -1,0 +1,46 @@
+{
+  "name": "leadline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "worker": "tsx worker/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "evals": "tsx tests/agent-evals/run.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:local": "bash scripts/local-db.sh",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.134.0",
+    "@supabase/ssr": "0.7.0",
+    "@supabase/supabase-js": "2.75.0",
+    "libphonenumber-js": "1.12.25",
+    "luxon": "3.7.2",
+    "next": "15.5.28",
+    "pg": "8.16.3",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "yaml": "2.8.1",
+    "zod": "4.1.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@tailwindcss/postcss": "4.1.18",
+    "@types/luxon": "3.7.1",
+    "@types/node": "22.18.12",
+    "@types/pg": "8.15.5",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "tailwindcss": "4.1.18",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
