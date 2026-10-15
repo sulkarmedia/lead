@@ -3,6 +3,7 @@
 # (auth schema, roles, auth.uid()). Used for tests and local dev only — production is Supabase.
 set -euo pipefail
 PGBIN=${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}
+PGBIN=${PGBIN:-$(dirname "$(command -v initdb 2>/dev/null || echo /usr/bin/initdb)")}
 DATA=${LOCAL_PGDATA:-.localdb}
 PORT=${LOCAL_PGPORT:-54329}
 # Postgres refuses to run as root; in containers, run it as the postgres user.
